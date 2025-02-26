@@ -135,7 +135,8 @@ _Retrieves stock values for a specific set of ticker symbols.
 
 # Notes and Assumptions
 
-- **No advanced security:** Authentication is assumed via **SDK/middleware**.  
+- **No advanced security:** Authentication is assumed via **SDK/middleware**.
+- **No Unit Tests For MVP:**  
 - **Basic scalability considerations:** Includes **caching** but not a fully distributed system.  
 - **Stock value calculation:**  
   - **Simple average** as specified.  
