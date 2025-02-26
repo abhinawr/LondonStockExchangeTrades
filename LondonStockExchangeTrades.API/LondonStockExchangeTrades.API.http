@@ -1,0 +1,6 @@
+@LondonStockExchangeTrades.API_HostAddress = http://localhost:5074
+
+GET {{LondonStockExchangeTrades.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
