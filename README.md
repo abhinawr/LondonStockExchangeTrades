@@ -62,19 +62,22 @@ _Retrieves stock values for a specific set of ticker symbols._
 
 #### **Request Example:**
 ```json
-{
-  "tickerSymbols": ["AAPL", "MSFT", "GOOGL"]
-}
+[
+  "AAPL", "TSLA"
+]
 ```
 
 #### **Response Example:**
 ```json
-{
-  "stocks": [
-    { "tickerSymbol": "AAPL", "price": 153.21 },
-    { "tickerSymbol": "MSFT", "price": 298.45 },
-    { "tickerSymbol": "GOOGL", "price": 2803.32 }
-  ]
-}
+[
+  {
+    "tickerSymbol": "AAPL",
+    "averagePrice": 155.146666
+  },
+  {
+    "tickerSymbol": "TSLA",
+    "averagePrice": 725.5
+  }
+]
 ```
 ```
