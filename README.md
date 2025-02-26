@@ -149,3 +149,23 @@ _Retrieves stock values for a specific set of ticker symbols.
 
 
 
+# Using `insert_trades.ps1` to Submit Trades  
+
+## **Prerequisites**  
+Before running the script, ensure you have:  
+- **PowerShell** installed on your system.  
+- The required **API endpoint** (`/api/trades`) available.  
+- **Internet access** (or network access to the API server).  
+
+---
+
+## **How to Run the Script**  
+
+### **Open PowerShell**  
+- Press `Win + X` and select **PowerShell** (or **Terminal** on Windows 11).  
+- Navigate to the folder containing `insert_trades.ps1`:  
+  ```powershell
+  cd C:\path\to\script
+  Set-ExecutionPolicy RemoteSigned -Scope Process
+  .\insert_trades.ps1
+  ```
