@@ -1,15 +1,74 @@
-# LondonStockExchangeTrades
 
-```md
-# API Design
+# London Stock Exchange API - MVP
 
-## Endpoints
+## System Design for MVP
 
-### **Submit a New Trade**
+### Architecture Overview
+- **Event-Driven**: Trades trigger a `TradeProcessedEvent`, which updates the cache asynchronously.
+- **Caching**: Stock values are cached (e.g., in-memory using `IMemoryCache`) to reduce database load.
+- **Database**: SQL Server with a simple `Trades` table.
+- **API**: RESTful endpoints served via **ASP.NET Core**.
+
+# Scalability and Enhancements
+
+## **Is it Scalable?**
+### **Current Design**
+- Works well for an **MVP** with moderate traffic.
+- **Bottlenecks:**  
+  - **In-memory caching** and a **single database** struggle under high load.
+
+### **High Traffic Coping Strategies**
+- **Event Bus:** Replace `InMemoryEventBus` with a distributed message broker (e.g., **RabbitMQ, Kafka**) to handle trade events asynchronously.
+- **Caching:** Use a **distributed cache** (e.g., **Redis**) instead of in-memory to scale across multiple instances.
+- **Database:**  
+  - Shard the **Trades** table by `TickerSymbol`.  
+  - Use a **NoSQL database** (e.g., **Cosmos DB**) for better write scalability.
+- **Load Balancing:** Deploy multiple API instances behind a **load balancer** (e.g., **Azure Load Balancer**).
+
+---
+
+## **Bottlenecks**
+| Component  | Issue |
+|------------|------------------------------------------------|
+| **Database**  | Single **SQL Server** instance struggles with high write throughput. |
+| **Caching**   | **In-memory cache** does not scale across multiple servers. |
+| **Event Handling** | **Synchronous event processing** delays responses. |
+
+---
+
+## **Improved Architecture**
+### **Microservices Approach**
+- **Trade Ingestion Service:** Handles trade writes.  
+- **Stock Query Service:** Reads stock values separately.  
+
+### **CQRS (Command Query Responsibility Segregation)**
+- **Separate Write & Read Models:**  
+  - **Write:** Trade ingestion.  
+  - **Read:** Stock value queries.
+- **Precomputed Stock Averages:** Store in a **read-optimized store** (e.g., **Redis**) for quick lookups.
+
+### **Event Sourcing**
+- Store trades as **events** in a stream (e.g., **Kafka**).
+- **Replay events** to compute stock averages **on demand** or **periodically**.
+
+### **Cloud Deployment**
+- Deploy on **Azure/AWS** with:  
+  - **Auto-scaling groups.**  
+  - **Managed databases** (e.g., **Azure SQL**).  
+  - **Serverless components** (e.g., **Azure Functions** for trade processing).
+
+---
+
+
+## API Design
+
+### Endpoints
+
+#### Submit a New Trade
 **POST** `/api/trades`  
 _Submits a new trade and triggers a real-time notification._
 
-#### **Request Example:**
+##### Request Example
 ```json
 {
   "tickerSymbol": "AAPL",
@@ -18,66 +77,75 @@ _Submits a new trade and triggers a real-time notification._
   "brokerId": "987645"
 }
 ```
+##### Response
+Status: 200 OK (on success)
 
----
-
-### **Get the Current Value of a Specific Stock**
-**GET** `/api/stocks/{tickerSymbol}`  
-_Retrieves the latest value of a stock using its ticker symbol._
-
-#### **Request Example:**
-```http
+#### Get the Current Value of a Specific Stock
+**GET** `/api/stocks/{tickerSymbol}`
+_Retrieves the latest value of a stock using its ticker symbol (average price across all trades)
+.
+##### Request Example
+http
 GET /api/stocks/AAPL
-```
 
-#### **Response Example:**
+##### Response Example
 ```json
 {
   "tickerSymbol": "AAPL",
-  "price": 153.21,
-  "lastUpdated": "2024-02-26T12:34:56Z"
+  "averagePrice": 153.21
 }
 ```
 
----
+#### Get the Current Values of All Stocks
+**GET** `/api/stocks`
+_Returns the latest values of all available stocks.
 
-### **Get the Current Values of All Stocks**
-**GET** `/api/stocks`  
-_Returns the latest values of all available stocks._
-
-#### **Response Example:**
+##### Response Example
 ```json
 [
-  { "tickerSymbol": "AAPL", "price": 153.21 },
-  { "tickerSymbol": "MSFT", "price": 298.45 },
-  { "tickerSymbol": "GOOGL", "price": 2803.32 }
+  { "tickerSymbol": "AAPL", "averagePrice": 153.21 },
+  { "tickerSymbol": "MSFT", "averagePrice": 298.45 },
+  { "tickerSymbol": "GOOGL", "averagePrice": 2803.32 }
 ]
 ```
 
----
-
-### **Get the Current Values for a List of Ticker Symbols**
-**POST** `/api/stocks/range`  
-_Retrieves stock values for a specific set of ticker symbols._
-
-#### **Request Example:**
+#### Get the Current Values for a List of Ticker Symbols
+**POST** `/api/stocks/range`
+_Retrieves stock values for a specific set of ticker symbols.
+##### Request Example
 ```json
 [
-  "AAPL", "TSLA"
+  "AAPL",
+  "MSFT",
+  "GOOGL"
 ]
 ```
 
-#### **Response Example:**
+
+##### Response Example
+
 ```json
 [
-  {
-    "tickerSymbol": "AAPL",
-    "averagePrice": 155.146666
-  },
-  {
-    "tickerSymbol": "TSLA",
-    "averagePrice": 725.5
-  }
+  { "tickerSymbol": "AAPL", "averagePrice": 153.21 },
+  { "tickerSymbol": "MSFT", "averagePrice": 298.45 },
+  { "tickerSymbol": "GOOGL", "averagePrice": 2803.32 }
 ]
 ```
-```
+
+
+# Notes and Assumptions
+
+- **No advanced security:** Authentication is assumed via **SDK/middleware**.  
+- **Basic scalability considerations:** Includes **caching** but not a fully distributed system.  
+- **Stock value calculation:**  
+  - **Simple average** as specified.  
+  - **Formula:** Stock value = **Average price** of all transactions for a given `tickerSymbol`.  
+- **API uses DTOs:**  
+  - Ensures clean data transfer.  
+  - **DTOs used:** `TradeRequestDto` and `StockValueDto`.  
+- **Caching is implemented:**  
+  - Improves performance for **frequent stock value queries**.  
+
+
+
+
