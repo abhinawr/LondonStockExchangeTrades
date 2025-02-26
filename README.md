@@ -78,10 +78,3 @@ _Retrieves stock values for a specific set of ticker symbols._
 }
 ```
 ```
-
-This README section:
-- Uses **headers** for better structure.
-- Provides **request and response examples**.
-- Formats **code blocks** properly.
-
-Let me know if you need any modifications! 🚀
